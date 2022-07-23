@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Add from './components/Add';
 import TodoList from './components/TodoList';
 import './App.css';
+import * as StotageHelper from './services/StorageHelper.js'
 
 function App() {
   const [todo, setTodo] = useState([])
+
+  useEffect(() => {
+    const localTodos = StotageHelper.getItem('__todos__')
+    if (localTodos) setTodo(prevState => ([...prevState, ...localTodos]))
+  }, [])
+  
+  useEffect(() => {
+    StotageHelper.setItem('__todos__', todo)
+  }, [todo])
 
   const addTodo = (textFromInput) => {
     const add = { id: Date.now(), text: textFromInput, status: false }

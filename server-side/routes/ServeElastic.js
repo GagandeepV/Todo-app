@@ -13,10 +13,12 @@ const getElasticBackend = async () => {
         return []
     }
 }
+
 router.get('/', async (req, res) => {
     const response = await getElasticBackend()
     res.json(response)
 })
+
 router
     .route('/:id')
     .get(async(req,res)=>{

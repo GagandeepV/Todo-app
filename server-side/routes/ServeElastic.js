@@ -21,8 +21,9 @@ router
         res.send(`Added data with id ${id}`)
     })
     .put((req, res) => {
-        const { params: { id: reqID } } = req
-        data = [...data.map(({ id: dataID, ...rest }) => dataID === Number.parseInt(reqID) ? ({ ...m, ...rest }) : ({ id: dataID, ...rest }))]
+        const { params: { id: reqID }, body } = req
+        data = [ ...data.map(({ id: dataID, ...rest }) => dataID === Number.parseInt(reqID) ? ({ id: dataID, ...rest, ...body }) : ({ id: dataID, ...rest }))]
+        console.log(data);
         res.send(`Modified data with id ${reqID}`)
     })
     .delete((req, res) => {
@@ -33,6 +34,7 @@ router
 
 
 export default router
+
 
 
 //old format or methods -- just for reference

@@ -3,27 +3,38 @@ import Header from './components/Header';
 import Add from './components/Add';
 import TodoList from './components/TodoList';
 import './App.css';
-import * as StotageHelper from './services/StorageHelper.js'
+import Config from './services/Config';
+
+// import * as StotageHelper from './services/StorageHelper.js'
+// useEffect(() => {
+//   const localTodos = StotageHelper.getItem('__todos__')
+//   if (localTodos) setTodo(prevState => ([...prevState, ...localTodos]))
+// }, [])
+
+// useEffect(() => {
+//   StotageHelper.setItem('__todos__', todo)
+// }, [todo])
+
 
 function App() {
   const [todo, setTodo] = useState([])
 
   useEffect(() => {
-    const localTodos = StotageHelper.getItem('__todos__')
-    if (localTodos) setTodo(prevState => ([...prevState, ...localTodos]))
+    const getBackend = async () => {
+      const { data } = await Config.get('/')
+      setTodo(data)
+    }
+    getBackend()
   }, [])
-  
-  useEffect(() => {
-    StotageHelper.setItem('__todos__', todo)
-  }, [todo])
 
-  const addTodo = (textFromInput) => {
+  const addTodo = async (textFromInput) => {
     const add = { id: Date.now(), text: textFromInput, status: false }
-    textFromInput && setTodo((prev) => [...prev, add])
+    textFromInput && await Config.post(`/${add.id}`, add) && setTodo((prev) => [...prev, add])
   }
 
-  const delTodo = (idFromTodo) => {
+  const delTodo = async (idFromTodo) => {
     const remainsTodo = todo.filter((f) => f.id !== idFromTodo)
+    await Config.delete(`/${idFromTodo}`)
     setTodo(remainsTodo)
   }
 
@@ -32,6 +43,11 @@ function App() {
       if (m.id === idFromTodo) return { ...m, status: !m.status }
       return m
     })
+    const requestBody = remainsTodo.reduce((acc,cur)=> {
+      if(cur.id === idFromTodo) return {...cur}
+      return acc
+    },{})
+    Config.put(`/${idFromTodo}`, requestBody)
     setTodo(remainsTodo)
   }
 
@@ -40,6 +56,11 @@ function App() {
       if (m.id === idFromTodo) return { ...m, text: textFromEdit }
       return m
     })
+    const requestBody = remainsTodo.reduce((acc,cur)=> {
+      if(cur.id === idFromTodo) return {...cur}
+      return acc
+    },{})
+    Config.put(`/${idFromTodo}`, requestBody)
     setTodo(remainsTodo);
   }
 

@@ -1,12 +1,10 @@
 import express from 'express'
+import Config from "../Services/Config.js";
 
 const router = express.Router()
 
 let data = []
 
-import Config from "../Services/Config.js";
-
-const router = express.Router()
 
 const getElasticBackend = async () => {
     try {

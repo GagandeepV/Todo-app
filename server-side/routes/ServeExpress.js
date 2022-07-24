@@ -1,47 +1,49 @@
 import express from 'express'
+import Config from "../Services/Config.js";
 
 const router = express.Router()
 
 let data = []
 
-router.get('/', (req, res) => {
-    res.json(data)
-})
 
+const getElasticBackend = async () => {
+    try {
+        const { data: { hits: { hits = [] } } } = await Config.get('/elastic-backend/todos/_search')
+        const requiredData = hits.map(({ _source }) => _source)
+        return requiredData
+    }
+    catch (error) {
+        return []
+    }
+}
+router.get('/', async (req, res) => {
+    const response = await getElasticBackend()
+    res.json(response)
+})
 router
     .route('/:id')
-    .get((req, res) => {
-        const { params: { id: reqID } } = req
-        data = [...data.filter(({ id: dataID }) => dataID === Number.parseInt(reqID))]
-        res.json(data)
+    .get(async(req,res)=>{
+        const {params:{id:paramID}} = req
+        const response = await getElasticBackend()
+        const specificResponse = response.filter(({id})=>id === Number.parseInt(paramID))
+        res.json(specificResponse)
     })
-    .post((req, res) => {
-        const { body: { id, ...rest } } = req
-        data = [...data, { id, ...rest }]
-        res.send(`Added data with id ${id}`)
+    .post(async (req, res) => {
+        const { body, params: { id } } = req
+        await Config.post(`/elastic-backend/todos/${id}`, body)
+        res.send(`Added/Modified data with id ${id}`)
     })
-    .put((req, res) => {
-        const { params: { id: reqID }, body } = req
-        data = [ ...data.map(({ id: dataID, ...rest }) => dataID === Number.parseInt(reqID) ? ({ id: dataID, ...rest, ...body }) : ({ id: dataID, ...rest }))]
-        console.log(data);
-        res.send(`Modified data with id ${reqID}`)
+    .delete(async (req, res) => {
+        const { params: { id } } = req
+        await Config.delete(`/elastic-backend/todos/${id}`)
+        res.send(`Deleted data with id ${id}`)
     })
-    .delete((req, res) => {
-        const { params: { id: reqID } } = req
-        data = [...data.filter(({ id: dataID }) => Number.parseInt(reqID) !== dataID)]  
-        res.send(`Deleted data with id ${reqID}`)
-    })
-
-
-export default router
-
 
 
 //old format or methods -- just for reference
 // router.get('/', (req, res) => {
 //     res.json(data)
 // })
-
 // router.route('/:id')
 //     .get((req, res) => {
 //         const { id } = req.params
@@ -83,3 +85,5 @@ export default router
 //             res.end()
 //         }
 //     })
+
+export default router
